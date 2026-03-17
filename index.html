@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dylan Valladares — Analista de Datos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f12;
+    --bg2: #13161b;
+    --bg3: #1a1e25;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8e4dc;
+    --muted: #7a7870;
+    --accent: #4EB89A;
+    --accent2: #2a7d65;
+    --accent-glow: rgba(78,184,154,0.15);
+    --gold: #c9a96e;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE TEXTURE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 5%;
+    background: rgba(13,15,18,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--text); text-decoration: none; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.8rem; list-style: none; }
+  .nav-links a { font-size: 0.8rem; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-cta { font-size: 0.8rem; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent2); padding: 0.45rem 1.1rem; border-radius: 4px; text-decoration: none; transition: 0.2s; }
+  .nav-cta:hover { background: var(--accent); color: #0d0f12; }
+  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+  .hamburger span { width: 22px; height: 1.5px; background: var(--text); transition: 0.3s; }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8rem 5% 5rem;
+    position: relative;
+  }
+
+  .hero-glow {
+    position: absolute; top: 20%; left: -10%; width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(78,184,154,0.08) 0%, transparent 70%); pointer-events: none;
+  }
+
+  .hero-inner {
+    max-width: 1100px;
+    width: 100%;
+    position: relative; z-index: 1;
+    display: flex; align-items: flex-start; gap: 4rem;
+  }
+
+  .hero-text { flex: 1.2; }
+  
+  .hero-image {
+    flex: 0.8;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .hero-image img {
+    width: 100%;
+    max-width: 380px;
+    max-height: 70vh;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .hero-image img:hover { transform: translateY(-5px); border-color: var(--accent2); }
+
+  .hero-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem; }
+  .hero-tag::before { content: ''; width: 28px; height: 1px; background: var(--accent); }
+  h1 { font-family: 'Fraunces', serif; font-size: clamp(2.8rem, 5vw, 4.5rem); font-weight: 300; line-height: 1.1; margin-bottom: 1.5rem; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .hero-desc { font-size: 1.05rem; color: var(--muted); max-width: 580px; margin-bottom: 2.5rem; line-height: 1.8; }
+  .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary { padding: 0.75rem 1.8rem; background: var(--accent); color: #0d0f12; font-size: 0.85rem; text-transform: uppercase; border-radius: 4px; text-decoration: none; transition: 0.2s; }
+  .btn-primary:hover { background: #5fcfb0; transform: translateY(-2px); }
+  .btn-secondary { padding: 0.75rem 1.8rem; border: 1px solid var(--border2); color: var(--text); font-size: 0.85rem; text-transform: uppercase; border-radius: 4px; text-decoration: none; transition: 0.2s; }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .hero-stats { display: flex; gap: 3rem; margin-top: 4rem; padding-top: 3rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .stat-num { font-family: 'Fraunces', serif; font-size: 2rem; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+  /* ─── SECTIONS GENERAL ─── */
+  section { padding: 6rem 5%; position: relative; z-index: 1; }
+  .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 3.5rem; }
+  .section-num { font-family: 'Fraunces', serif; font-size: 0.85rem; color: var(--accent); opacity: 0.7; }
+  h2 { font-family: 'Fraunces', serif; font-size: clamp(1.6rem, 3vw, 2.2rem); color: var(--text); }
+  .section-line { flex: 1; height: 1px; background: var(--border); margin-left: 1rem; max-width: 200px; }
+
+  /* ─── ABOUT ─── */
+  #about { background: var(--bg2); }
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; }
+  .about-text p { font-size: 1rem; color: var(--muted); margin-bottom: 1.2rem; line-height: 1.9; }
+  .about-text p strong { color: var(--text); font-weight: 400; }
+  .about-highlights { display: flex; flex-direction: column; gap: 1rem; }
+  .highlight-item { padding: 1.2rem 1.4rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg3); border-left: 3px solid var(--accent2); transition: 0.2s; }
+  .highlight-item:hover { border-left-color: var(--accent); }
+  .highlight-title { font-size: 0.8rem; text-transform: uppercase; color: var(--accent); margin-bottom: 0.4rem; }
+  .highlight-text { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+  /* ─── EXPERIENCE ─── */
+  #experience { background: var(--bg); }
+  .timeline { position: relative; }
+  .timeline::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 0; width: 1px; background: var(--border); }
+  .timeline-item { padding-left: 2rem; margin-bottom: 3rem; position: relative; }
+  .timeline-item::before { content: ''; position: absolute; left: -4px; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent2); border: 2px solid var(--bg); transition: 0.2s; }
+  .timeline-item:hover::before { background: var(--accent); }
+  .timeline-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.3rem; }
+  .job-title { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--text); }
+  .job-period { font-size: 0.78rem; color: var(--accent); white-space: nowrap; }
+  .job-company { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .job-bullets { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+  .job-bullets li { font-size: 0.9rem; color: var(--muted); padding-left: 1rem; position: relative; line-height: 1.7; }
+  .job-bullets li::before { content: '—'; position: absolute; left: 0; color: var(--accent2); font-size: 0.8rem; }
+
+  /* ─── PROJECTS ─── */
+  #projects { background: var(--bg2); }
+  .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+  .project-card { border: 1px solid var(--border); border-radius: 12px; background: var(--bg3); overflow: hidden; transition: 0.25s; position: relative; display: flex; flex-direction: column; }
+  .project-card:hover { border-color: var(--accent2); transform: translateY(-4px); }
+  
+  .project-img-wrapper { width: 100%; height: 180px; overflow: hidden; border-bottom: 1px solid var(--border); }
+  .project-img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+  .project-card:hover .project-img-wrapper img { transform: scale(1.05); }
+
+  .project-card-top { padding: 1.5rem 1.8rem 1.2rem; flex: 1; }
+  .project-tag { display: inline-block; font-size: 0.7rem; text-transform: uppercase; color: var(--accent); background: var(--accent-glow); border: 1px solid var(--accent2); padding: 3px 10px; border-radius: 20px; margin-bottom: 1rem; }
+  .project-title { font-family: 'Fraunces', serif; font-size: 1.15rem; color: var(--text); margin-bottom: 0.8rem; line-height: 1.3; }
+  .project-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.2rem; }
+  .project-stack { display: flex; flex-wrap: wrap; gap: 6px; }
+  .stack-tag { font-size: 0.72rem; padding: 2px 8px; border-radius: 3px; background: var(--bg2); color: var(--muted); border: 1px solid var(--border); font-family: monospace; }
+  .project-card-bottom { padding: 1rem 1.8rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .project-result { font-size: 0.78rem; color: var(--accent); font-weight: 400; }
+
+  /* ─── SERVICES ─── */
+  #services { background: var(--bg); }
+  .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+  .service-card { padding: 2rem; border: 1px solid var(--border); border-radius: 12px; background: var(--bg2); transition: 0.3s; }
+  .service-card:hover { transform: translateY(-5px); border-color: var(--accent2); }
+  .service-icon { font-size: 2rem; margin-bottom: 1rem; }
+  .service-title { font-family: 'Fraunces', serif; font-size: 1.15rem; color: var(--text); margin-bottom: 0.8rem; }
+  .service-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+  /* ─── SKILLS CON LOGOS ─── */
+  #skills { background: var(--bg2); }
+  .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+  .skill-group { padding: 1.8rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg3); transition: 0.2s; }
+  .skill-group:hover { border-color: var(--accent2); transform: translateY(-3px); }
+  .skill-group-title { font-size: 0.75rem; text-transform: uppercase; color: var(--accent); margin-bottom: 1.2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
+  
+  .skill-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border2); color: var(--muted); transition: 0.2s; }
+  .chip img { width: 14px; height: 14px; object-fit: contain; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.featured { border-color: var(--accent2); color: var(--accent); background: var(--accent-glow); }
+  
+  .soft-skills-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .soft-item { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--muted); }
+  .soft-item::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+
+  /* ─── EDUCATION ─── */
+  #education { background: var(--bg); }
+  .edu-block { margin-bottom: 2rem; }
+  .edu-title { font-family: 'Fraunces', serif; font-size: 1.1rem; margin-bottom: 0.3rem; color: var(--text); }
+  .edu-inst { font-size: 0.85rem; color: var(--accent); margin-bottom: 0.5rem; }
+  .edu-date { font-size: 0.8rem; color: var(--muted); }
+
+  /* ─── CONTACT Y FOOTER ─── */
+  #contact { background: var(--bg2); text-align: center; }
+  .contact-inner { max-width: 600px; margin: 0 auto; }
+  .contact-intro { font-size: 1rem; color: var(--text); margin-bottom: 3rem; line-height: 1.8; }
+  .contact-links { display: flex; justify-content: center; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 3rem; }
+  .contact-link { display: flex; align-items: center; gap: 8px; padding: 0.8rem 1.4rem; border: 1px solid var(--border2); border-radius: 8px; background: var(--bg3); color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: 0.2s; }
+  .contact-link:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+  .contact-link svg { width: 16px; height: 16px; }
+  .contact-email { font-family: 'Fraunces', serif; font-size: clamp(1.2rem, 3vw, 1.8rem); color: var(--text); text-decoration: none; border-bottom: 1px solid var(--accent2); transition: 0.2s; }
+  .contact-email:hover { color: var(--accent); border-color: var(--accent); }
+  footer { padding: 2rem 5%; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.78rem; color: var(--muted); }
+
+  /* ─── ANIMATIONS & RESPONSIVE ─── */
+  .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+  
+  @media (max-width: 900px) {
+    .hero-inner { flex-direction: column-reverse; text-align: center; align-items: center; }
+    .hero-desc { margin: 0 auto 2.5rem; }
+    .hero-btns, .hero-stats { justify-content: center; }
+    .hero-tag { margin: 0 auto 1.5rem; }
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 5%; }
+    .nav-links, .nav-cta { display: none; }
+    .nav-links.open { display: flex; flex-direction: column; position: fixed; top: 60px; left: 0; right: 0; background: var(--bg2); padding: 1.5rem 5%; border-bottom: 1px solid var(--border); z-index: 99; }
+    .hamburger { display: flex; }
+    #hero { padding: 7rem 5% 4rem; }
+    .about-grid, .education-grid { grid-template-columns: 1fr; }
+    .timeline::before, .timeline-item::before { display: none; }
+    .timeline-item { padding-left: 0; }
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#hero" class="nav-logo">Dylan<span>.</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about">Sobre mí</a></li>
+    <li><a href="#experience">Experiencia</a></li>
+    <li><a href="#projects">Proyectos</a></li>
+    <li><a href="#services">Valor</a></li>
+    <li><a href="#skills">Habilidades</a></li>
+    <li><a href="#education">Educación</a></li>
+  </ul>
+  <a href="mailto:valladaresmotadylan@gmail.com" class="nav-cta">Contactar</a>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-text fade-in">
+      <div class="hero-tag">Analista de Datos · Business Intelligence</div>
+      <h1>Dylan<br>Valladares<br><em>Mota.</em></h1>
+      <p class="hero-desc">
+        Egresado de Ingeniería de Sistemas (UTP), enfocado en transformar datos en decisiones estratégicas. Construyo dashboards e informes que conectan la operación con la dirección.
+      </p>
+      <div class="hero-btns">
+        <a href="#projects" class="btn-primary">Ver proyectos</a>
+        <a href="#contact" class="btn-secondary">Contactar</a>
+        <a href="CV_Dylan_Valladares_Mota.pdf" target="_blank" class="btn-secondary" style="border-color: var(--accent); color: var(--accent);">Ver CV</a>
+      </div>
+      <div class="hero-stats">
+        <div><div class="stat-num">4+</div><div class="stat-label">Proyectos de datos</div></div>
+        <div><div class="stat-num">200+</div><div class="stat-label">Activos monitoreados</div></div>
+        <div><div class="stat-num">1</div><div class="stat-label">Año de experiencia</div></div>
+      </div>
+    </div>
+    
+    <div class="hero-image fade-in">
+      <img src="WhatsApp Image 2026-03-11 at 7.48.29 AM.jpeg" alt="Dylan Valladares Mota">
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="section-header fade-in">
+    <span class="section-num">01</span><h2>Sobre mí</h2><div class="section-line"></div>
+  </div>
+  <div class="about-grid">
+    <div class="about-text fade-in">
+      <p>Soy egresado de <strong>Ingeniería de Sistemas e Informática (UTP)</strong> con experiencia práctica en TI dentro del sector industrial y de seguridad privada. Durante ese camino descubrí mi verdadera vocación: el <strong>Análisis de Datos y el Business Intelligence</strong>.</p>
+      <p>Me especializo en transformar la gestión tradicional de TI y operaciones mediante la <strong>automatización de procesos</strong> y la creación de modelos visuales que permiten a los equipos tomar decisiones estratégicas fundamentadas.</p>
+      <p>Actualmente me encuentro reforzando mis conocimientos en <strong>SQL intermedio y Power BI</strong>, con la meta de integrarme a un equipo donde pueda aportar valor a través de los datos.</p>
+    </div>
+    <div class="about-highlights fade-in">
+      <div class="highlight-item">
+        <div class="highlight-title">Business Intelligence</div>
+        <div class="highlight-text">Diseñé un Dashboard de Salud de Activos TI en Power BI para monitorear el ciclo de vida de más de 200 equipos.</div>
+      </div>
+      <div class="highlight-item">
+        <div class="highlight-title">ETL & Gestión de datos</div>
+        <div class="highlight-text">Aplicación de limpieza y modelado de datos para optimizar reportes diarios y control de inventarios.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="experience">
+  <div class="section-header fade-in">
+    <span class="section-num">02</span><h2>Experiencia</h2><div class="section-line"></div>
+  </div>
+  <div class="timeline">
+    
+    <div class="timeline-item fade-in">
+      <div class="timeline-header"><div class="job-title">Practicante de TI</div><div class="job-period">Oct 2025 — Actualidad</div></div>
+      <div class="job-company" data-location="Callao, Perú">Sudamericana de Fibras</div>
+      <ul class="job-bullets">
+        <li>Administración de Terminales Virtuales, Active Directory y Microsoft 365 Admin Center.</li>
+        <li>Gestión de conectividad (APs/Switches) y configuración de políticas de seguridad en Firewall.</li>
+        <li>Elaboración de reportes mensuales de consumo de impresión por área y usuario.</li>
+        <li>Resolución de incidencias técnicas (Nivel 1 y 2) y participación en sesiones de mejora.</li>
+        <li>Mantenimiento preventivo y correctivo de hardware y software en entornos industriales.</li>
+        <li>Gestión integral del inventario y documentación de procesos del área de TI.</li>
+      </ul>
+    </div>
+
+    <div class="timeline-item fade-in">
+      <div class="timeline-header"><div class="job-title">Asistente de Sistemas</div><div class="job-period">Oct 2024 — Jul 2025</div></div>
+      <div class="job-company" data-location="Lima, Perú">Protssa Protección y Resguardo</div>
+      <ul class="job-bullets">
+        <li>Soporte técnico y mantenimiento de sistemas y equipos.</li>
+        <li>Elaboración de dashboards con Power BI para análisis operativo.</li>
+        <li>Administración de carpetas compartidas para mejorar la colaboración.</li>
+        <li>Implementación de cableado estructurado e instalación de cámaras CCTV.</li>
+        <li>Apoyo en el seguimiento de requerimientos para implementar mejoras tecnológicas.</li>
+      </ul>
+    </div>
+
+    <div class="timeline-item fade-in">
+      <div class="timeline-header"><div class="job-title">Gestor de Datos</div><div class="job-period">Mar 2021 — Dic 2021</div></div>
+      <div class="job-company" data-location="Lima, Perú">Policía Nacional del Perú · Voluntariado</div>
+      <ul class="job-bullets">
+        <li>Actualización de bases de datos de salud pública en Excel durante la pandemia COVID-19.</li>
+        <li>Creación de tablas dinámicas y reportes para seguimiento de casos.</li>
+        <li>Organización y análisis de datos sensibles con criterio de confidencialidad.</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<section id="projects">
+  <div class="section-header fade-in">
+    <span class="section-num">03</span><h2>Proyectos</h2><div class="section-line"></div>
+  </div>
+  <div class="projects-grid">
+
+    <div class="project-card fade-in">
+      <div class="project-img-wrapper">
+        <img src="1764168113826.jfif" alt="Dashboard Equipos TI">
+      </div>
+      <div class="project-card-top">
+        <span class="project-tag">Power BI + Excel</span>
+        <div class="project-title">Dashboard de Salud de Equipos</div>
+        <p class="project-desc">Dashboard corporativo para monitorear el estado del hardware y software distribuido en la organización.</p>
+        <div class="project-stack">
+          <span class="stack-tag">Power BI</span><span class="stack-tag">Excel</span>
+        </div>
+      </div>
+      <div class="project-card-bottom"><span class="project-result">📊 13.8% hardware crítico identificado</span></div>
+    </div>
+
+    <div class="project-card fade-in">
+      <div class="project-img-wrapper">
+        <img src="1725067711820.jfif" alt="Dashboard Finanzas">
+      </div>
+      <div class="project-card-top">
+        <span class="project-tag">Excel + Power Pivot</span>
+        <div class="project-title">Dashboard de Finanzas Personales</div>
+        <p class="project-desc">Dashboard interactivo para registrar gastos mensuales e identificar concentración por categoría.</p>
+        <div class="project-stack">
+          <span class="stack-tag">Excel</span><span class="stack-tag">Power Pivot</span>
+        </div>
+      </div>
+      <div class="project-card-bottom"><span class="project-result">💡 Análisis con segmentadores dinámicos</span></div>
+    </div>
+
+    <div class="project-card fade-in">
+      <div class="project-img-wrapper">
+        <img src="https://placehold.co/600x400/13161b/4EB89A?text=Ver+Mapa" alt="Mapa de Personal">
+      </div>
+      <div class="project-card-top">
+        <span class="project-tag">Power BI</span>
+        <div class="project-title">Mapa de Gestión de Personal</div>
+        <p class="project-desc">Visualización interactiva en mapa de requerimientos, personal y vacantes de seguridad por zona.</p>
+        <div class="project-stack">
+          <span class="stack-tag">Power BI</span><span class="stack-tag">Mapas</span>
+        </div>
+      </div>
+      <div class="project-card-bottom"><span class="project-result">🗺️ Visión geográfica de cobertura</span></div>
+    </div>
+
+    <div class="project-card fade-in">
+      <div class="project-img-wrapper">
+        <img src="1727131743082.jfif" alt="Dashboard CR7">
+      </div>
+      <div class="project-card-top">
+        <span class="project-tag">Power BI + CSV</span>
+        <div class="project-title">Dashboard — Goles de Cristiano Ronaldo</div>
+        <p class="project-desc">Análisis visual de todos los goles de CR7. Transformación de datos con Power Query y gráficos interactivos.</p>
+        <div class="project-stack">
+          <span class="stack-tag">Power BI</span><span class="stack-tag">Power Query</span>
+        </div>
+      </div>
+      <div class="project-card-bottom"><span class="project-result">⚽ Análisis por temporada y liga</span></div>
+    </div>
+
+  </div>
+</section>
+
+<section id="services">
+  <div class="section-header fade-in">
+    <span class="section-num">04</span><h2>Cómo aporto valor</h2><div class="section-line"></div>
+  </div>
+  <div class="services-grid fade-in">
+    <div class="service-card">
+      <div class="service-icon">📊</div>
+      <h3 class="service-title">Desarrollo de Dashboards</h3>
+      <p class="service-desc">Creación de tableros interactivos y reportes visuales en Power BI y Excel que facilitan el análisis y la toma de decisiones estratégicas.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">⚙️</div>
+      <h3 class="service-title">ETL & Modelado de Datos</h3>
+      <p class="service-desc">Extracción, transformación y limpieza de datos utilizando herramientas como Power Query para asegurar la integridad de la información.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🚀</div>
+      <h3 class="service-title">Mejora Continua</h3>
+      <p class="service-desc">Análisis y automatización de procesos operativos tradicionales orientados a optimizar la eficiencia y generar mayor valor a la organización.</p>
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="section-header fade-in">
+    <span class="section-num">05</span><h2>Habilidades</h2><div class="section-line"></div>
+  </div>
+  <div class="skills-grid">
+
+    <div class="skill-group fade-in">
+      <div class="skill-group-title">Análisis de datos</div>
+      <div class="skill-chips">
+        <span class="chip featured"><img src="https://cdn.simpleicons.org/microsoftexcel/217346" alt="Excel"> Excel Intermedio</span>
+        <span class="chip featured"><img src="https://cdn.simpleicons.org/powerbi/F2C811" alt="Power BI"> Power BI</span>
+        <span class="chip featured">Power Query / Pivot</span>
+        <span class="chip"><img src="https://cdn.simpleicons.org/postgresql/4169E1" alt="SQL"> SQL Básico</span>
+        <span class="chip">Tablas dinámicas</span>
+        <span class="chip">ETL</span>
+      </div>
+    </div>
+
+    <div class="skill-group fade-in">
+      <div class="skill-group-title">Tecnología & Sistemas</div>
+      <div class="skill-chips">
+        <span class="chip"><img src="https://cdn.simpleicons.org/html5/E34F26" alt="HTML"> HTML / CSS</span>
+        <span class="chip"><img src="https://cdn.simpleicons.org/microsoft/5E968C" alt="Microsoft"> Active Directory</span>
+        <span class="chip"><img src="https://cdn.simpleicons.org/microsoft365/D83B01" alt="M365"> Microsoft 365</span>
+        <span class="chip"><img src="https://cdn.simpleicons.org/sap/008FD3" alt="SAP"> SAP</span>
+        <span class="chip">CCTV</span>
+        <span class="chip">Redes / Firewall</span>
+      </div>
+    </div>
+
+    <div class="skill-group fade-in">
+      <div class="skill-group-title">Habilidades blandas</div>
+      <div class="soft-skills-list">
+        <div class="soft-item">Pensamiento analítico orientado a resultados</div>
+        <div class="soft-item">Comunicación efectiva de información técnica</div>
+        <div class="soft-item">Trabajo colaborativo y orientación al servicio</div>
+        <div class="soft-item">Proactividad e iniciativa</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="education">
+  <div class="section-header fade-in">
+    <span class="section-num">06</span><h2>Educación e Idiomas</h2><div class="section-line"></div>
+  </div>
+  <div class="about-grid education-grid">
+    <div class="fade-in">
+      <div class="edu-block">
+        <h3 class="edu-title">Ingeniería de Sistemas e Informática</h3>
+        <div class="edu-inst">Universidad Tecnológica del Perú (UTP) · Egresado</div>
+        <div class="edu-date">2021 — 2025 | Lima, Perú</div>
+      </div>
+      <div class="edu-block">
+        <h3 class="edu-title">Programa de Idiomas</h3>
+        <div class="edu-inst">Instituto Cultural Peruano Norteamericano (ICPNA)</div>
+        <div class="edu-date">2026 — Actualidad | Lima, Perú</div>
+      </div>
+    </div>
+    
+    <div class="fade-in">
+      <h3 class="edu-title" style="margin-bottom: 1rem;">Certificaciones Destacadas</h3>
+      <ul class="job-bullets" style="margin-bottom: 2rem;">
+        <li>Microsoft Excel Profesional — Instituto Iberoamericano</li>
+        <li>Scrum Master Fundamentals</li>
+        <li>Especialista de Soporte Técnico — UTP</li>
+        <li>Asistente de docencia en Algorítmica — UTP</li>
+      </ul>
+      
+      <h3 class="edu-title" style="margin-bottom: 1rem;">Idiomas</h3>
+      <div class="skill-chips">
+        <span class="chip featured">Español (Nativo)</span>
+        <span class="chip featured">Inglés (Básico A2 - MCER)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="section-header fade-in" style="justify-content:center; text-align:center; flex-direction:column; align-items:center; gap:0.5rem">
+    <span class="section-num">07</span><h2>Contacto</h2>
+  </div>
+  <div class="contact-inner">
+    <p class="contact-intro fade-in">
+      ¿Buscas un <strong>Analista de Datos</strong> para tu equipo? Te invito a visitar mi perfil de LinkedIn para conocer más de mi trayectoria. ¡Escríbeme y conversemos sobre cómo puedo aportar valor a tu empresa con el análisis de datos!
+    </p>
+    <div class="contact-links fade-in">
+      <a href="https://www.linkedin.com/in/dylanvalladares18" target="_blank" class="contact-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        Ver LinkedIn
+      </a>
+      <a href="tel:+51904307882" class="contact-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        (+51) 904 307 882
+      </a>
+    </div>
+    <a href="mailto:valladaresmotadylan@gmail.com" class="contact-email fade-in">valladaresmotadylan@gmail.com</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 Dylan Valladares Mota</span>
+  <span>Lima, Perú · Egresado de Ingeniería de Sistemas · UTP</span>
+</footer>
+
+<script>
+  function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => { document.getElementById('navLinks').classList.remove('open'); });
+  });
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => { if (entry.isIntersecting) { setTimeout(() => entry.target.classList.add('visible'), i * 80); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
