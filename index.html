@@ -35,6 +35,101 @@
 
   body.modal-open { overflow: hidden; }
 
+  /* ─── PAGE LOADER ─── */
+  .page-loader {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  .page-loader.hidden { opacity: 0; visibility: hidden; }
+  .loader-dot {
+    width: 14px; height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 24px var(--accent);
+    animation: loaderPulse 1s ease infinite;
+  }
+  @keyframes loaderPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.4); opacity: 0.3; }
+  }
+
+  /* ─── SCROLL PROGRESS BAR ─── */
+  .scroll-progress {
+    position: fixed;
+    top: 0; left: 0;
+    width: 0%; height: 2px;
+    background: linear-gradient(to right, var(--accent2), var(--accent));
+    z-index: 999;
+    pointer-events: none;
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  /* ─── CUSTOM CURSOR (solo desktop) ─── */
+  .cursor-dot, .cursor-ring {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    top: 0; left: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .cursor-dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .cursor-ring {
+    width: 32px; height: 32px;
+    border: 1.5px solid var(--accent2);
+    border-radius: 50%;
+    transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease, opacity 0.3s ease;
+  }
+  .cursor-ring.hover {
+    width: 56px; height: 56px;
+    border-color: var(--accent);
+    background: rgba(78,184,154,0.06);
+  }
+  body.cursor-active { cursor: none; }
+  body.cursor-active a, body.cursor-active button,
+  body.cursor-active [role="button"], body.cursor-active .project-card-h { cursor: none; }
+  body.cursor-active .cursor-dot, body.cursor-active .cursor-ring { opacity: 1; }
+  @media (max-width: 768px), (hover: none) {
+    .cursor-dot, .cursor-ring { display: none; }
+  }
+
+  /* ─── HERO STATUS BADGE (Disponible) ─── */
+  .hero-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: rgba(78,184,154,0.08);
+    border: 1px solid var(--accent2);
+    border-radius: 100px;
+    margin-bottom: 1.8rem;
+    font-size: 0.78rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 0 rgba(78,184,154,0.5);
+    animation: statusPulse 2s ease infinite;
+  }
+  @keyframes statusPulse {
+    0% { box-shadow: 0 0 0 0 rgba(78,184,154,0.5); }
+    70% { box-shadow: 0 0 0 10px rgba(78,184,154,0); }
+    100% { box-shadow: 0 0 0 0 rgba(78,184,154,0); }
+  }
+
   /* ─── NOISE TEXTURE OVERLAY ─── */
   body::before {
     content: '';
@@ -122,8 +217,8 @@
   .btn-secondary { padding: 0.75rem 1.8rem; border: 1px solid var(--border2); color: var(--text); font-size: 0.85rem; text-transform: uppercase; border-radius: 4px; text-decoration: none; transition: 0.2s; }
   .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
   .hero-stats { display: flex; gap: 3rem; margin-top: 4rem; padding-top: 3rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
-  .stat-num { font-family: 'Fraunces', serif; font-size: 2rem; color: var(--accent); line-height: 1; }
-  .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+  .stat-num { font-family: 'Fraunces', serif; font-size: clamp(2.8rem, 5vw, 4rem); font-weight: 400; color: var(--accent); line-height: 1; letter-spacing: -0.02em; }
+  .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
 
   /* ─── SECTIONS GENERAL ─── */
   section { padding: 6rem 5%; position: relative; z-index: 1; }
@@ -162,52 +257,117 @@
   .job-bullets li { font-size: 0.9rem; color: var(--muted); padding-left: 1rem; position: relative; line-height: 1.7; }
   .job-bullets li::before { content: '—'; position: absolute; left: 0; color: var(--accent2); font-size: 0.8rem; }
 
-  /* ─── PROJECTS ─── */
+  /* ─── PROJECTS (Layout horizontal estilo arsène) ─── */
   #projects { background: var(--bg2); }
-  .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
-  .project-card {
-    border: 1px solid var(--border); border-radius: 12px; background: var(--bg3);
-    overflow: hidden; transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
-    position: relative; display: flex; flex-direction: column;
+  .projects-list { display: flex; flex-direction: column; gap: 2rem; }
+
+  .project-card-h {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--bg3);
+    overflow: hidden;
+    min-height: 360px;
     cursor: pointer;
+    position: relative;
+    transition: border-color 0.3s ease, transform 0.4s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s ease;
   }
-  .project-card:hover {
+  .project-card-h:hover {
     border-color: var(--accent2);
-    transform: translateY(-4px);
-    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    transform: translateY(-6px);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.4);
   }
-  .project-card::after {
+  .project-card-h.reverse { flex-direction: row-reverse; }
+
+  .project-card-h::after {
     content: 'Ver detalle →';
     position: absolute;
-    top: 12px; right: 12px;
-    background: rgba(13,15,18,0.85);
-    backdrop-filter: blur(6px);
+    top: 20px; right: 20px;
+    background: rgba(13,15,18,0.9);
+    backdrop-filter: blur(8px);
     color: var(--accent);
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 5px 10px;
-    border-radius: 20px;
+    letter-spacing: 0.06em;
+    padding: 6px 14px;
+    border-radius: 100px;
     border: 1px solid var(--accent2);
     opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transform: translateY(-6px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .project-card-h:hover::after { opacity: 1; transform: translateY(0); }
+  .project-card-h.reverse::after { right: auto; left: 20px; }
+
+  .project-h-image {
+    flex: 1.1;
+    overflow: hidden;
+    position: relative;
+    min-height: 360px;
+    background: var(--bg2);
+  }
+  .project-h-image img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .project-card-h:hover .project-h-image img { transform: scale(1.04); }
+  .project-h-image::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 60%, rgba(13,15,18,0.4) 100%);
     pointer-events: none;
   }
-  .project-card:hover::after { opacity: 1; transform: translateY(0); }
 
-  .project-img-wrapper { width: 100%; height: 180px; overflow: hidden; border-bottom: 1px solid var(--border); }
-  .project-img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
-  .project-card:hover .project-img-wrapper img { transform: scale(1.06); }
+  .project-h-info {
+    flex: 1;
+    padding: 3rem 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 
-  .project-card-top { padding: 1.5rem 1.8rem 1.2rem; flex: 1; }
-  .project-tag { display: inline-block; font-size: 0.7rem; text-transform: uppercase; color: var(--accent); background: var(--accent-glow); border: 1px solid var(--accent2); padding: 3px 10px; border-radius: 20px; margin-bottom: 1rem; }
-  .project-title { font-family: 'Fraunces', serif; font-size: 1.15rem; color: var(--text); margin-bottom: 0.8rem; line-height: 1.3; }
-  .project-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.2rem; }
-  .project-stack { display: flex; flex-wrap: wrap; gap: 6px; }
-  .stack-tag { font-size: 0.72rem; padding: 2px 8px; border-radius: 3px; background: var(--bg2); color: var(--muted); border: 1px solid var(--border); font-family: monospace; }
-  .project-card-bottom { padding: 1rem 1.8rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .project-result { font-size: 0.78rem; color: var(--accent); font-weight: 400; }
+  .project-h-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-glow);
+    border: 1px solid var(--accent2);
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-bottom: 1.4rem;
+    align-self: flex-start;
+    letter-spacing: 0.05em;
+  }
+  .project-h-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .project-h-desc {
+    font-size: 0.95rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 1.6rem;
+  }
+  .project-h-stack {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 1.6rem;
+  }
+  .project-h-result {
+    font-size: 0.82rem;
+    color: var(--accent);
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+  }
+  .stack-tag { font-size: 0.72rem; padding: 3px 10px; border-radius: 3px; background: var(--bg2); color: var(--muted); border: 1px solid var(--border); font-family: monospace; }
 
   /* ─── PROJECT MODAL ─── */
   .modal-overlay {
@@ -421,8 +581,12 @@
     .hero-desc { margin: 0 auto 2.5rem; }
     .hero-btns, .hero-stats { justify-content: center; }
     .hero-tag { margin: 0 auto 1.5rem; }
+    .hero-status { display: inline-flex; }
     .modal-content { padding: 1.8rem 1.5rem; }
     .modal-hero { height: 220px; }
+    .project-card-h, .project-card-h.reverse { flex-direction: column; min-height: auto; }
+    .project-h-image { min-height: 240px; flex: none; width: 100%; }
+    .project-h-info { padding: 2rem 1.8rem; }
   }
 
   @media (max-width: 768px) {
@@ -448,6 +612,18 @@
 </head>
 <body>
 
+<!-- Page loader -->
+<div class="page-loader" id="pageLoader">
+  <div class="loader-dot"></div>
+</div>
+
+<!-- Scroll progress bar -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Custom cursor (solo desktop) -->
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
 <nav>
   <a href="#hero" class="nav-logo">Dylan<span>.</span></a>
   <ul class="nav-links" id="navLinks">
@@ -468,6 +644,10 @@
   <div class="hero-glow" id="heroGlow"></div>
   <div class="hero-inner">
     <div class="hero-text">
+      <div class="hero-status" data-hero>
+        <span class="status-dot"></span>
+        <span>Disponible para nuevas oportunidades</span>
+      </div>
       <div class="hero-tag" data-hero>Analista de Datos · Business Intelligence</div>
       <h1 data-hero>Dylan<br>Valladares<br><em>Mota.</em></h1>
       <p class="hero-desc" data-hero>
@@ -562,7 +742,7 @@
   <div class="section-header" data-anim>
     <span class="section-num">03</span><h2>Proyectos</h2><div class="section-line"></div>
   </div>
-  <div class="projects-grid" id="projectsGrid">
+  <div class="projects-list" id="projectsGrid">
     <!-- Las cards se renderizan dinámicamente desde JS -->
   </div>
 </section>
@@ -813,7 +993,7 @@ const projectsGrid = document.getElementById('projectsGrid');
 
 PROJECTS.forEach((p, idx) => {
   const card = document.createElement('article');
-  card.className = 'project-card';
+  card.className = 'project-card-h' + (idx % 2 === 1 ? ' reverse' : '');
   card.setAttribute('data-anim-stagger', '');
   card.setAttribute('data-project-id', p.id);
   card.setAttribute('role', 'button');
@@ -821,19 +1001,17 @@ PROJECTS.forEach((p, idx) => {
   card.setAttribute('aria-label', `Abrir detalle del proyecto ${p.title}`);
 
   card.innerHTML = `
-    <div class="project-img-wrapper">
+    <div class="project-h-image">
       <img src="${p.cover}" alt="${p.title}" loading="lazy">
     </div>
-    <div class="project-card-top">
-      <span class="project-tag">${p.tag}</span>
-      <div class="project-title">${p.title}</div>
-      <p class="project-desc">${p.description}</p>
-      <div class="project-stack">
+    <div class="project-h-info">
+      <span class="project-h-tag">${p.tag}</span>
+      <h3 class="project-h-title">${p.title}</h3>
+      <p class="project-h-desc">${p.description}</p>
+      <div class="project-h-stack">
         ${p.stack.map(s => `<span class="stack-tag">${s}</span>`).join('')}
       </div>
-    </div>
-    <div class="project-card-bottom">
-      <span class="project-result">${p.result}</span>
+      <div class="project-h-result">${p.result}</div>
     </div>
   `;
 
@@ -1111,6 +1289,77 @@ if (!reduceMotion) {
       }
     );
   }
+}
+
+/* ============================================================
+   6. PAGE LOADER  ──────────────────────────────────────────────
+   ============================================================ */
+window.addEventListener('load', () => {
+  const loader = document.getElementById('pageLoader');
+  setTimeout(() => loader.classList.add('hidden'), 400);
+});
+// Fallback por si load no dispara
+setTimeout(() => {
+  const loader = document.getElementById('pageLoader');
+  if (loader) loader.classList.add('hidden');
+}, 2500);
+
+/* ============================================================
+   7. SCROLL PROGRESS BAR  ──────────────────────────────────────
+   ============================================================ */
+const scrollProgress = document.getElementById('scrollProgress');
+function updateScrollProgress() {
+  const scrolled = window.scrollY;
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = total > 0 ? (scrolled / total) * 100 : 0;
+  scrollProgress.style.width = pct + '%';
+}
+window.addEventListener('scroll', updateScrollProgress, { passive: true });
+updateScrollProgress();
+
+/* ============================================================
+   8. CUSTOM CURSOR (solo desktop con hover real)  ──────────────
+   ============================================================ */
+const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+if (supportsHover) {
+  const dot = document.getElementById('cursorDot');
+  const ring = document.getElementById('cursorRing');
+  document.body.classList.add('cursor-active');
+
+  let mouseX = 0, mouseY = 0;
+  let ringX = 0, ringY = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+  });
+
+  // Smooth follow para el ring
+  function animateRing() {
+    ringX += (mouseX - ringX) * 0.18;
+    ringY += (mouseY - ringY) * 0.18;
+    ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  // Estado hover sobre elementos interactivos
+  const hoverSel = 'a, button, [role="button"], .project-card-h, .chip, .modal-close, .nav-cta, .btn-primary, .btn-secondary, .contact-link';
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest(hoverSel)) ring.classList.add('hover');
+  });
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest(hoverSel)) ring.classList.remove('hover');
+  });
+
+  // Ocultar al salir de la ventana
+  document.addEventListener('mouseleave', () => {
+    dot.style.opacity = '0'; ring.style.opacity = '0';
+  });
+  document.addEventListener('mouseenter', () => {
+    dot.style.opacity = '1'; ring.style.opacity = '1';
+  });
 }
 
 </script>
