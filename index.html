@@ -33,6 +33,8 @@
     overflow-x: hidden;
   }
 
+  body.modal-open { overflow: hidden; }
+
   /* ─── NOISE TEXTURE OVERLAY ─── */
   body::before {
     content: '';
@@ -74,6 +76,7 @@
   .hero-glow {
     position: absolute; top: 20%; left: -10%; width: 500px; height: 500px;
     background: radial-gradient(circle, rgba(78,184,154,0.08) 0%, transparent 70%); pointer-events: none;
+    will-change: transform;
   }
 
   .hero-inner {
@@ -84,7 +87,7 @@
   }
 
   .hero-text { flex: 1.2; }
-  
+
   .hero-image {
     flex: 0.8;
     position: relative;
@@ -92,7 +95,7 @@
     justify-content: center;
     margin-top: 1rem;
   }
-  
+
   .hero-image img {
     width: 100%;
     max-width: 380px;
@@ -103,7 +106,7 @@
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     border: 1px solid var(--border);
     display: block;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, border-color 0.3s ease;
   }
 
   .hero-image img:hover { transform: translateY(-5px); border-color: var(--accent2); }
@@ -143,10 +146,14 @@
   /* ─── EXPERIENCE ─── */
   #experience { background: var(--bg); }
   .timeline { position: relative; }
-  .timeline::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 0; width: 1px; background: var(--border); }
+  .timeline::before {
+    content: ''; position: absolute; left: 0; top: 8px; bottom: 0; width: 1px;
+    background: var(--border);
+    transform-origin: top;
+  }
   .timeline-item { padding-left: 2rem; margin-bottom: 3rem; position: relative; }
   .timeline-item::before { content: ''; position: absolute; left: -4px; top: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent2); border: 2px solid var(--bg); transition: 0.2s; }
-  .timeline-item:hover::before { background: var(--accent); }
+  .timeline-item:hover::before { background: var(--accent); transform: scale(1.3); }
   .timeline-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.3rem; }
   .job-title { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--text); }
   .job-period { font-size: 0.78rem; color: var(--accent); white-space: nowrap; }
@@ -158,12 +165,40 @@
   /* ─── PROJECTS ─── */
   #projects { background: var(--bg2); }
   .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
-  .project-card { border: 1px solid var(--border); border-radius: 12px; background: var(--bg3); overflow: hidden; transition: 0.25s; position: relative; display: flex; flex-direction: column; }
-  .project-card:hover { border-color: var(--accent2); transform: translateY(-4px); }
-  
+  .project-card {
+    border: 1px solid var(--border); border-radius: 12px; background: var(--bg3);
+    overflow: hidden; transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+    position: relative; display: flex; flex-direction: column;
+    cursor: pointer;
+  }
+  .project-card:hover {
+    border-color: var(--accent2);
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+  }
+  .project-card::after {
+    content: 'Ver detalle →';
+    position: absolute;
+    top: 12px; right: 12px;
+    background: rgba(13,15,18,0.85);
+    backdrop-filter: blur(6px);
+    color: var(--accent);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--accent2);
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+  }
+  .project-card:hover::after { opacity: 1; transform: translateY(0); }
+
   .project-img-wrapper { width: 100%; height: 180px; overflow: hidden; border-bottom: 1px solid var(--border); }
-  .project-img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-  .project-card:hover .project-img-wrapper img { transform: scale(1.05); }
+  .project-img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+  .project-card:hover .project-img-wrapper img { transform: scale(1.06); }
 
   .project-card-top { padding: 1.5rem 1.8rem 1.2rem; flex: 1; }
   .project-tag { display: inline-block; font-size: 0.7rem; text-transform: uppercase; color: var(--accent); background: var(--accent-glow); border: 1px solid var(--accent2); padding: 3px 10px; border-radius: 20px; margin-bottom: 1rem; }
@@ -174,6 +209,165 @@
   .project-card-bottom { padding: 1rem 1.8rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .project-result { font-size: 0.78rem; color: var(--accent); font-weight: 400; }
 
+  /* ─── PROJECT MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(5,7,10,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 200;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 2rem 1rem;
+    opacity: 0;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    width: 100%;
+    max-width: 960px;
+    max-height: 90vh;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    transform: translateY(40px) scale(0.96);
+    opacity: 0;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 40px; height: 40px;
+    background: rgba(13,15,18,0.7);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--border2);
+    border-radius: 50%;
+    color: var(--text);
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.2s;
+    z-index: 10;
+    line-height: 1;
+  }
+  .modal-close:hover { border-color: var(--accent); color: var(--accent); transform: rotate(90deg); }
+
+  .modal-body { overflow-y: auto; padding: 0; }
+  .modal-body::-webkit-scrollbar { width: 8px; }
+  .modal-body::-webkit-scrollbar-track { background: var(--bg2); }
+  .modal-body::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 4px; }
+
+  .modal-hero {
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg3);
+  }
+  .modal-hero img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .modal-hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, var(--bg2) 100%);
+    pointer-events: none;
+  }
+
+  .modal-content { padding: 2.2rem 2.5rem 2.5rem; }
+  .modal-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-glow);
+    border: 1px solid var(--accent2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 1.2rem;
+  }
+  .modal-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    color: var(--text);
+    margin-bottom: 0.6rem;
+    line-height: 1.2;
+  }
+  .modal-subtitle {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    line-height: 1.7;
+  }
+  .modal-section { margin-bottom: 2rem; }
+  .modal-section-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-section p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 0.8rem;
+  }
+  .modal-section ul {
+    list-style: none;
+    display: flex; flex-direction: column;
+    gap: 0.5rem;
+  }
+  .modal-section ul li {
+    font-size: 0.9rem;
+    color: var(--muted);
+    padding-left: 1.1rem;
+    position: relative;
+    line-height: 1.7;
+  }
+  .modal-section ul li::before {
+    content: '—';
+    position: absolute; left: 0;
+    color: var(--accent2);
+  }
+
+  .modal-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.8rem;
+  }
+  .modal-gallery-item {
+    aspect-ratio: 16 / 10;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    cursor: zoom-in;
+    transition: 0.2s;
+  }
+  .modal-gallery-item:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .modal-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .modal-stack { display: flex; flex-wrap: wrap; gap: 8px; }
+  .modal-stack .stack-tag { font-size: 0.78rem; padding: 4px 10px; }
+
+  .modal-result-box {
+    background: var(--accent-glow);
+    border: 1px solid var(--accent2);
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+
   /* ─── SERVICES ─── */
   #services { background: var(--bg); }
   .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
@@ -183,19 +377,19 @@
   .service-title { font-family: 'Fraunces', serif; font-size: 1.15rem; color: var(--text); margin-bottom: 0.8rem; }
   .service-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
 
-  /* ─── SKILLS CON LOGOS ─── */
+  /* ─── SKILLS ─── */
   #skills { background: var(--bg2); }
   .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
   .skill-group { padding: 1.8rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg3); transition: 0.2s; }
   .skill-group:hover { border-color: var(--accent2); transform: translateY(-3px); }
   .skill-group-title { font-size: 0.75rem; text-transform: uppercase; color: var(--accent); margin-bottom: 1.2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
-  
+
   .skill-chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border2); color: var(--muted); transition: 0.2s; }
   .chip img { width: 14px; height: 14px; object-fit: contain; }
   .chip:hover { border-color: var(--accent); color: var(--accent); }
   .chip.featured { border-color: var(--accent2); color: var(--accent); background: var(--accent-glow); }
-  
+
   .soft-skills-list { display: flex; flex-direction: column; gap: 0.6rem; }
   .soft-item { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--muted); }
   .soft-item::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
@@ -219,15 +413,16 @@
   .contact-email:hover { color: var(--accent); border-color: var(--accent); }
   footer { padding: 2rem 5%; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.78rem; color: var(--muted); }
 
-  /* ─── ANIMATIONS & RESPONSIVE ─── */
-  .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
-  .fade-in.visible { opacity: 1; transform: translateY(0); }
-  
+  /* ─── INITIAL STATE for GSAP elements ─── */
+  .gsap-fade { opacity: 0; }
+
   @media (max-width: 900px) {
     .hero-inner { flex-direction: column-reverse; text-align: center; align-items: center; }
     .hero-desc { margin: 0 auto 2.5rem; }
     .hero-btns, .hero-stats { justify-content: center; }
     .hero-tag { margin: 0 auto 1.5rem; }
+    .modal-content { padding: 1.8rem 1.5rem; }
+    .modal-hero { height: 220px; }
   }
 
   @media (max-width: 768px) {
@@ -240,6 +435,14 @@
     .timeline::before, .timeline-item::before { display: none; }
     .timeline-item { padding-left: 0; }
     footer { flex-direction: column; text-align: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gsap-fade { opacity: 1; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 </style>
 </head>
@@ -262,48 +465,48 @@
 </nav>
 
 <section id="hero">
-  <div class="hero-glow"></div>
+  <div class="hero-glow" id="heroGlow"></div>
   <div class="hero-inner">
-    <div class="hero-text fade-in">
-      <div class="hero-tag">Analista de Datos · Business Intelligence</div>
-      <h1>Dylan<br>Valladares<br><em>Mota.</em></h1>
-      <p class="hero-desc">
+    <div class="hero-text">
+      <div class="hero-tag" data-hero>Analista de Datos · Business Intelligence</div>
+      <h1 data-hero>Dylan<br>Valladares<br><em>Mota.</em></h1>
+      <p class="hero-desc" data-hero>
         Egresado de Ingeniería de Sistemas (UTP), enfocado en transformar datos en decisiones estratégicas. Construyo dashboards e informes que conectan la operación con la dirección.
       </p>
-      <div class="hero-btns">
+      <div class="hero-btns" data-hero>
         <a href="#projects" class="btn-primary">Ver proyectos</a>
         <a href="#contact" class="btn-secondary">Contactar</a>
         <a href="CV_Dylan_Valladares_Mota.pdf" target="_blank" class="btn-secondary" style="border-color: var(--accent); color: var(--accent);">Ver CV</a>
       </div>
-      <div class="hero-stats">
-        <div><div class="stat-num">4+</div><div class="stat-label">Proyectos de datos</div></div>
-        <div><div class="stat-num">200+</div><div class="stat-label">Activos monitoreados</div></div>
-        <div><div class="stat-num">1</div><div class="stat-label">Año de experiencia</div></div>
+      <div class="hero-stats" data-hero>
+        <div><div class="stat-num" data-counter="4">0</div><div class="stat-label">Proyectos de datos</div></div>
+        <div><div class="stat-num" data-counter="200" data-suffix="+">0</div><div class="stat-label">Activos monitoreados</div></div>
+        <div><div class="stat-num" data-counter="1">0</div><div class="stat-label">Año de experiencia</div></div>
       </div>
     </div>
-    
-    <div class="hero-image fade-in">
+
+    <div class="hero-image" data-hero-image>
       <img src="WhatsApp Image 2026-03-11 at 7.48.29 AM.jpeg" alt="Dylan Valladares Mota">
     </div>
   </div>
 </section>
 
 <section id="about">
-  <div class="section-header fade-in">
+  <div class="section-header" data-anim>
     <span class="section-num">01</span><h2>Sobre mí</h2><div class="section-line"></div>
   </div>
   <div class="about-grid">
-    <div class="about-text fade-in">
+    <div class="about-text" data-anim>
       <p>Soy egresado de <strong>Ingeniería de Sistemas e Informática (UTP)</strong> con experiencia práctica en TI dentro del sector industrial y de seguridad privada. Durante ese camino descubrí mi verdadera vocación: el <strong>Análisis de Datos y el Business Intelligence</strong>.</p>
       <p>Me especializo en transformar la gestión tradicional de TI y operaciones mediante la <strong>automatización de procesos</strong> y la creación de modelos visuales que permiten a los equipos tomar decisiones estratégicas fundamentadas.</p>
       <p>Actualmente me encuentro reforzando mis conocimientos en <strong>SQL intermedio y Power BI</strong>, con la meta de integrarme a un equipo donde pueda aportar valor a través de los datos.</p>
     </div>
-    <div class="about-highlights fade-in">
-      <div class="highlight-item">
+    <div class="about-highlights">
+      <div class="highlight-item" data-anim-stagger>
         <div class="highlight-title">Business Intelligence</div>
         <div class="highlight-text">Diseñé un Dashboard de Salud de Activos TI en Power BI para monitorear el ciclo de vida de más de 200 equipos.</div>
       </div>
-      <div class="highlight-item">
+      <div class="highlight-item" data-anim-stagger>
         <div class="highlight-title">ETL & Gestión de datos</div>
         <div class="highlight-text">Aplicación de limpieza y modelado de datos para optimizar reportes diarios y control de inventarios.</div>
       </div>
@@ -312,12 +515,12 @@
 </section>
 
 <section id="experience">
-  <div class="section-header fade-in">
+  <div class="section-header" data-anim>
     <span class="section-num">02</span><h2>Experiencia</h2><div class="section-line"></div>
   </div>
-  <div class="timeline">
-    
-    <div class="timeline-item fade-in">
+  <div class="timeline" id="timeline">
+
+    <div class="timeline-item" data-anim-stagger>
       <div class="timeline-header"><div class="job-title">Practicante de TI</div><div class="job-period">Oct 2025 — Actualidad</div></div>
       <div class="job-company" data-location="Callao, Perú">Sudamericana de Fibras</div>
       <ul class="job-bullets">
@@ -330,7 +533,7 @@
       </ul>
     </div>
 
-    <div class="timeline-item fade-in">
+    <div class="timeline-item" data-anim-stagger>
       <div class="timeline-header"><div class="job-title">Asistente de Sistemas</div><div class="job-period">Oct 2024 — Jul 2025</div></div>
       <div class="job-company" data-location="Lima, Perú">Protssa Protección y Resguardo</div>
       <ul class="job-bullets">
@@ -342,7 +545,7 @@
       </ul>
     </div>
 
-    <div class="timeline-item fade-in">
+    <div class="timeline-item" data-anim-stagger>
       <div class="timeline-header"><div class="job-title">Gestor de Datos</div><div class="job-period">Mar 2021 — Dic 2021</div></div>
       <div class="job-company" data-location="Lima, Perú">Policía Nacional del Perú · Voluntariado</div>
       <ul class="job-bullets">
@@ -356,90 +559,30 @@
 </section>
 
 <section id="projects">
-  <div class="section-header fade-in">
+  <div class="section-header" data-anim>
     <span class="section-num">03</span><h2>Proyectos</h2><div class="section-line"></div>
   </div>
-  <div class="projects-grid">
-
-    <div class="project-card fade-in">
-      <div class="project-img-wrapper">
-        <img src="1764168113826.jfif" alt="Dashboard Equipos TI">
-      </div>
-      <div class="project-card-top">
-        <span class="project-tag">Power BI + Excel</span>
-        <div class="project-title">Dashboard de Salud de Equipos</div>
-        <p class="project-desc">Dashboard corporativo para monitorear el estado del hardware y software distribuido en la organización.</p>
-        <div class="project-stack">
-          <span class="stack-tag">Power BI</span><span class="stack-tag">Excel</span>
-        </div>
-      </div>
-      <div class="project-card-bottom"><span class="project-result">📊 13.8% hardware crítico identificado</span></div>
-    </div>
-
-    <div class="project-card fade-in">
-      <div class="project-img-wrapper">
-        <img src="1725067711820.jfif" alt="Dashboard Finanzas">
-      </div>
-      <div class="project-card-top">
-        <span class="project-tag">Excel + Power Pivot</span>
-        <div class="project-title">Dashboard de Finanzas Personales</div>
-        <p class="project-desc">Dashboard interactivo para registrar gastos mensuales e identificar concentración por categoría.</p>
-        <div class="project-stack">
-          <span class="stack-tag">Excel</span><span class="stack-tag">Power Pivot</span>
-        </div>
-      </div>
-      <div class="project-card-bottom"><span class="project-result">💡 Análisis con segmentadores dinámicos</span></div>
-    </div>
-
-    <div class="project-card fade-in">
-      <div class="project-img-wrapper">
-        <img src="https://placehold.co/600x400/13161b/4EB89A?text=Ver+Mapa" alt="Mapa de Personal">
-      </div>
-      <div class="project-card-top">
-        <span class="project-tag">Power BI</span>
-        <div class="project-title">Mapa de Gestión de Personal</div>
-        <p class="project-desc">Visualización interactiva en mapa de requerimientos, personal y vacantes de seguridad por zona.</p>
-        <div class="project-stack">
-          <span class="stack-tag">Power BI</span><span class="stack-tag">Mapas</span>
-        </div>
-      </div>
-      <div class="project-card-bottom"><span class="project-result">🗺️ Visión geográfica de cobertura</span></div>
-    </div>
-
-    <div class="project-card fade-in">
-      <div class="project-img-wrapper">
-        <img src="1727131743082.jfif" alt="Dashboard CR7">
-      </div>
-      <div class="project-card-top">
-        <span class="project-tag">Power BI + CSV</span>
-        <div class="project-title">Dashboard — Goles de Cristiano Ronaldo</div>
-        <p class="project-desc">Análisis visual de todos los goles de CR7. Transformación de datos con Power Query y gráficos interactivos.</p>
-        <div class="project-stack">
-          <span class="stack-tag">Power BI</span><span class="stack-tag">Power Query</span>
-        </div>
-      </div>
-      <div class="project-card-bottom"><span class="project-result">⚽ Análisis por temporada y liga</span></div>
-    </div>
-
+  <div class="projects-grid" id="projectsGrid">
+    <!-- Las cards se renderizan dinámicamente desde JS -->
   </div>
 </section>
 
 <section id="services">
-  <div class="section-header fade-in">
+  <div class="section-header" data-anim>
     <span class="section-num">04</span><h2>Cómo aporto valor</h2><div class="section-line"></div>
   </div>
-  <div class="services-grid fade-in">
-    <div class="service-card">
+  <div class="services-grid">
+    <div class="service-card" data-anim-stagger>
       <div class="service-icon">📊</div>
       <h3 class="service-title">Desarrollo de Dashboards</h3>
       <p class="service-desc">Creación de tableros interactivos y reportes visuales en Power BI y Excel que facilitan el análisis y la toma de decisiones estratégicas.</p>
     </div>
-    <div class="service-card">
+    <div class="service-card" data-anim-stagger>
       <div class="service-icon">⚙️</div>
       <h3 class="service-title">ETL & Modelado de Datos</h3>
       <p class="service-desc">Extracción, transformación y limpieza de datos utilizando herramientas como Power Query para asegurar la integridad de la información.</p>
     </div>
-    <div class="service-card">
+    <div class="service-card" data-anim-stagger>
       <div class="service-icon">🚀</div>
       <h3 class="service-title">Mejora Continua</h3>
       <p class="service-desc">Análisis y automatización de procesos operativos tradicionales orientados a optimizar la eficiencia y generar mayor valor a la organización.</p>
@@ -448,12 +591,12 @@
 </section>
 
 <section id="skills">
-  <div class="section-header fade-in">
+  <div class="section-header" data-anim>
     <span class="section-num">05</span><h2>Habilidades</h2><div class="section-line"></div>
   </div>
   <div class="skills-grid">
 
-    <div class="skill-group fade-in">
+    <div class="skill-group" data-anim-stagger>
       <div class="skill-group-title">Análisis de datos</div>
       <div class="skill-chips">
         <span class="chip featured"><img src="https://cdn.simpleicons.org/microsoftexcel/217346" alt="Excel"> Excel Intermedio</span>
@@ -465,7 +608,7 @@
       </div>
     </div>
 
-    <div class="skill-group fade-in">
+    <div class="skill-group" data-anim-stagger>
       <div class="skill-group-title">Tecnología & Sistemas</div>
       <div class="skill-chips">
         <span class="chip"><img src="https://cdn.simpleicons.org/html5/E34F26" alt="HTML"> HTML / CSS</span>
@@ -477,7 +620,7 @@
       </div>
     </div>
 
-    <div class="skill-group fade-in">
+    <div class="skill-group" data-anim-stagger>
       <div class="skill-group-title">Habilidades blandas</div>
       <div class="soft-skills-list">
         <div class="soft-item">Pensamiento analítico orientado a resultados</div>
@@ -491,11 +634,11 @@
 </section>
 
 <section id="education">
-  <div class="section-header fade-in">
+  <div class="section-header" data-anim>
     <span class="section-num">06</span><h2>Educación e Idiomas</h2><div class="section-line"></div>
   </div>
   <div class="about-grid education-grid">
-    <div class="fade-in">
+    <div data-anim>
       <div class="edu-block">
         <h3 class="edu-title">Ingeniería de Sistemas e Informática</h3>
         <div class="edu-inst">Universidad Tecnológica del Perú (UTP) · Egresado</div>
@@ -507,8 +650,8 @@
         <div class="edu-date">2026 — Actualidad | Lima, Perú</div>
       </div>
     </div>
-    
-    <div class="fade-in">
+
+    <div data-anim>
       <h3 class="edu-title" style="margin-bottom: 1rem;">Certificaciones Destacadas</h3>
       <ul class="job-bullets" style="margin-bottom: 2rem;">
         <li>Microsoft Excel Profesional — Instituto Iberoamericano</li>
@@ -516,7 +659,7 @@
         <li>Especialista de Soporte Técnico — UTP</li>
         <li>Asistente de docencia en Algorítmica — UTP</li>
       </ul>
-      
+
       <h3 class="edu-title" style="margin-bottom: 1rem;">Idiomas</h3>
       <div class="skill-chips">
         <span class="chip featured">Español (Nativo)</span>
@@ -527,14 +670,14 @@
 </section>
 
 <section id="contact">
-  <div class="section-header fade-in" style="justify-content:center; text-align:center; flex-direction:column; align-items:center; gap:0.5rem">
+  <div class="section-header" data-anim style="justify-content:center; text-align:center; flex-direction:column; align-items:center; gap:0.5rem">
     <span class="section-num">07</span><h2>Contacto</h2>
   </div>
   <div class="contact-inner">
-    <p class="contact-intro fade-in">
+    <p class="contact-intro" data-anim>
       ¿Buscas un <strong>Analista de Datos</strong> para tu equipo? Te invito a visitar mi perfil de LinkedIn para conocer más de mi trayectoria. ¡Escríbeme y conversemos sobre cómo puedo aportar valor a tu empresa con el análisis de datos!
     </p>
-    <div class="contact-links fade-in">
+    <div class="contact-links" data-anim>
       <a href="https://www.linkedin.com/in/dylanvalladares18" target="_blank" class="contact-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
         Ver LinkedIn
@@ -544,7 +687,7 @@
         (+51) 904 307 882
       </a>
     </div>
-    <a href="mailto:valladaresmotadylan@gmail.com" class="contact-email fade-in">valladaresmotadylan@gmail.com</a>
+    <a href="mailto:valladaresmotadylan@gmail.com" class="contact-email" data-anim>valladaresmotadylan@gmail.com</a>
   </div>
 </section>
 
@@ -553,15 +696,423 @@
   <span>Lima, Perú · Egresado de Ingeniería de Sistemas · UTP</span>
 </footer>
 
+<!-- ─── MODAL DE PROYECTO ─── -->
+<div class="modal-overlay" id="projectModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal" id="projectModalContent">
+    <button class="modal-close" id="modalClose" aria-label="Cerrar modal">×</button>
+    <div class="modal-body" id="modalBody">
+      <!-- contenido inyectado por JS -->
+    </div>
+  </div>
+</div>
+
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
 <script>
-  function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
-  document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => { document.getElementById('navLinks').classList.remove('open'); });
+/* ============================================================
+   1. DATOS DE PROYECTOS  ───────────────────────────────────────
+   Para añadir/editar un proyecto, modifica este array.
+   Cada proyecto puede crecer con más imágenes en `gallery` y
+   más texto en `context`, `challenge`, `solution`, `bullets`.
+   ============================================================ */
+const PROJECTS = [
+  {
+    id: 'dashboard-equipos-ti',
+    tag: 'Power BI + Excel',
+    title: 'Dashboard de Salud de Equipos',
+    cover: '1764168113826.jfif',
+    description: 'Dashboard corporativo para monitorear el estado del hardware y software distribuido en la organización.',
+    stack: ['Power BI', 'Excel', 'Power Query'],
+    result: '13.8% hardware crítico identificado',
+    subtitle: 'Visión consolidada del ciclo de vida del parque tecnológico de la organización, con foco en reducir riesgo operativo.',
+    context: 'En el área de TI no existía un consolidado actualizado del estado del hardware y software de los más de 200 equipos distribuidos. Las decisiones de renovación se tomaban de forma reactiva.',
+    challenge: 'Construir un único punto de verdad que permitiera visualizar antigüedad, estado y obsolescencia de los equipos, y que sirviera como soporte para la planificación de inversiones de TI.',
+    solution: 'Modelé los datos en Excel/Power Query, los limpié y los conecté a Power BI para generar KPIs claros: distribución por antigüedad, equipos críticos, software no actualizado y proyección de renovación.',
+    bullets: [
+      'Identificación de 13.8% de hardware en estado crítico',
+      'Segmentación por área, tipo de equipo y antigüedad',
+      'Indicadores de salud para soporte a decisiones de renovación',
+      'Reporte navegable por usuarios no técnicos'
+    ],
+    gallery: [
+      '1764168113826.jfif'
+    ]
+  },
+  {
+    id: 'dashboard-finanzas',
+    tag: 'Excel + Power Pivot',
+    title: 'Dashboard de Finanzas Personales',
+    cover: '1725067711820.jfif',
+    description: 'Dashboard interactivo para registrar gastos mensuales e identificar concentración por categoría.',
+    stack: ['Excel', 'Power Pivot', 'VBA básico'],
+    result: 'Análisis con segmentadores dinámicos',
+    subtitle: 'Herramienta de uso personal para entender en qué se concentra el gasto mensual y proyectar capacidad de ahorro.',
+    context: 'Buscaba una forma rápida de registrar gastos, evitar la fricción de apps externas y entender mis hábitos financieros con datos propios.',
+    challenge: 'Diseñar un libro de Excel que funcione como un mini sistema: ingreso de datos, modelado y visualización en una misma interfaz.',
+    solution: 'Usé Power Pivot para construir el modelo, formularios con botones para el ingreso de datos y segmentadores para filtrar por mes, categoría y tipo de gasto.',
+    bullets: [
+      'Botones de ingreso de datos para reducir errores manuales',
+      'Visualizaciones dinámicas por categoría',
+      'Filtros y segmentadores por mes y tipo de gasto',
+      'Indicadores de variación mensual'
+    ],
+    gallery: [
+      '1725067711820.jfif'
+    ]
+  },
+  {
+    id: 'mapa-personal-seguridad',
+    tag: 'Power BI',
+    title: 'Mapa de Gestión de Personal',
+    cover: 'https://placehold.co/600x400/13161b/4EB89A?text=Ver+Mapa',
+    description: 'Visualización interactiva en mapa de requerimientos, personal y vacantes de seguridad por zona.',
+    stack: ['Power BI', 'Mapas', 'DAX'],
+    result: 'Visión geográfica de cobertura',
+    subtitle: 'Mapa interactivo para entender la dotación y las brechas de personal de seguridad por zona geográfica.',
+    context: 'La gestión de personal en empresas de seguridad requiere ubicar rápidamente dónde hay déficit de cobertura. Los reportes en tablas no permitían captar la dimensión territorial.',
+    challenge: 'Convertir registros operativos en un mapa que cruzara requerimientos, personal asignado y vacantes abiertas por zona.',
+    solution: 'Integré las fuentes en Power BI, modelé las relaciones y construí un mapa con filtros por tipo de agente, edad y ubicación, complementado con KPIs de cobertura.',
+    bullets: [
+      'Vista geográfica de requerimientos vs cobertura real',
+      'Filtros por tipo de agente, edad y ubicación',
+      'Detección rápida de zonas con vacantes críticas',
+      'Drill-down desde región a punto de servicio'
+    ],
+    gallery: []
+  },
+  {
+    id: 'dashboard-cr7',
+    tag: 'Power BI + CSV',
+    title: 'Dashboard — Goles de Cristiano Ronaldo',
+    cover: '1727131743082.jfif',
+    description: 'Análisis visual de todos los goles de CR7. Transformación de datos con Power Query y gráficos interactivos.',
+    stack: ['Power BI', 'Power Query', 'CSV'],
+    result: 'Análisis por temporada y liga',
+    subtitle: 'Proyecto personal para practicar limpieza de datos, modelado y narrativa visual usando un dataset abierto.',
+    context: 'Quería trabajar con un dataset extenso que tuviera múltiples dimensiones: tiempo, competición, club, tipo de gol. CR7 ofrece un caso ideal con miles de registros.',
+    challenge: 'Limpiar inconsistencias en el CSV original, modelar los datos y entregar una narrativa clara sobre el rendimiento por temporada y competición.',
+    solution: 'Apliqué Power Query para normalizar nombres de equipos y fechas, generé jerarquías de tiempo y diseñé un dashboard con filtros cruzados y vistas por temporada, liga y posición.',
+    bullets: [
+      'Limpieza y normalización de datos con Power Query',
+      'Análisis por temporada, competición y posición',
+      'Filtros cruzados e interacciones entre visuales',
+      'Storytelling visual con jerarquía de información'
+    ],
+    gallery: [
+      '1727131743082.jfif'
+    ]
+  }
+];
+
+/* ============================================================
+   2. RENDER DE CARDS DE PROYECTOS  ─────────────────────────────
+   ============================================================ */
+const projectsGrid = document.getElementById('projectsGrid');
+
+PROJECTS.forEach((p, idx) => {
+  const card = document.createElement('article');
+  card.className = 'project-card';
+  card.setAttribute('data-anim-stagger', '');
+  card.setAttribute('data-project-id', p.id);
+  card.setAttribute('role', 'button');
+  card.setAttribute('tabindex', '0');
+  card.setAttribute('aria-label', `Abrir detalle del proyecto ${p.title}`);
+
+  card.innerHTML = `
+    <div class="project-img-wrapper">
+      <img src="${p.cover}" alt="${p.title}" loading="lazy">
+    </div>
+    <div class="project-card-top">
+      <span class="project-tag">${p.tag}</span>
+      <div class="project-title">${p.title}</div>
+      <p class="project-desc">${p.description}</p>
+      <div class="project-stack">
+        ${p.stack.map(s => `<span class="stack-tag">${s}</span>`).join('')}
+      </div>
+    </div>
+    <div class="project-card-bottom">
+      <span class="project-result">${p.result}</span>
+    </div>
+  `;
+
+  card.addEventListener('click', () => openProjectModal(p.id));
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openProjectModal(p.id);
+    }
   });
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry, i) => { if (entry.isIntersecting) { setTimeout(() => entry.target.classList.add('visible'), i * 80); } });
-  }, { threshold: 0.1 });
-  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  projectsGrid.appendChild(card);
+});
+
+/* ============================================================
+   3. MODAL  ────────────────────────────────────────────────────
+   ============================================================ */
+const modalOverlay = document.getElementById('projectModal');
+const modalContent = document.getElementById('projectModalContent');
+const modalBody = document.getElementById('modalBody');
+const modalCloseBtn = document.getElementById('modalClose');
+let lastFocusedEl = null;
+
+function buildModalContent(project) {
+  const galleryHTML = project.gallery && project.gallery.length
+    ? `
+      <div class="modal-section">
+        <div class="modal-section-title">Galería</div>
+        <div class="modal-gallery">
+          ${project.gallery.map(g => `
+            <div class="modal-gallery-item">
+              <img src="${g}" alt="${project.title}" loading="lazy">
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `
+    : `
+      <div class="modal-section">
+        <div class="modal-section-title">Galería</div>
+        <p style="font-size: 0.88rem; color: var(--muted); font-style: italic;">
+          Las capturas e imágenes de este proyecto se publicarán próximamente.
+        </p>
+      </div>
+    `;
+
+  return `
+    <div class="modal-hero">
+      <img src="${project.cover}" alt="${project.title}">
+    </div>
+    <div class="modal-content">
+      <span class="modal-tag">${project.tag}</span>
+      <h2 class="modal-title" id="modalTitle">${project.title}</h2>
+      <p class="modal-subtitle">${project.subtitle}</p>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Resultado</div>
+        <div class="modal-result-box">${project.result}</div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Contexto</div>
+        <p>${project.context}</p>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Desafío</div>
+        <p>${project.challenge}</p>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Solución</div>
+        <p>${project.solution}</p>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Características clave</div>
+        <ul>
+          ${project.bullets.map(b => `<li>${b}</li>`).join('')}
+        </ul>
+      </div>
+
+      ${galleryHTML}
+
+      <div class="modal-section">
+        <div class="modal-section-title">Stack utilizado</div>
+        <div class="modal-stack">
+          ${project.stack.map(s => `<span class="stack-tag">${s}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openProjectModal(id) {
+  const project = PROJECTS.find(p => p.id === id);
+  if (!project) return;
+
+  lastFocusedEl = document.activeElement;
+  modalBody.innerHTML = buildModalContent(project);
+  modalBody.scrollTop = 0;
+  modalOverlay.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  gsap.set(modalOverlay, { opacity: 0 });
+  gsap.set(modalContent, { y: 40, scale: 0.96, opacity: 0 });
+
+  const tl = gsap.timeline();
+  tl.to(modalOverlay, { opacity: 1, duration: 0.25, ease: 'power2.out' })
+    .to(modalContent, { y: 0, scale: 1, opacity: 1, duration: 0.45, ease: 'power3.out' }, '-=0.1');
+
+  // Foco accesible
+  setTimeout(() => modalCloseBtn.focus(), 100);
+}
+
+function closeProjectModal() {
+  const tl = gsap.timeline({
+    onComplete: () => {
+      modalOverlay.classList.remove('active');
+      document.body.classList.remove('modal-open');
+      modalBody.innerHTML = '';
+      if (lastFocusedEl) lastFocusedEl.focus();
+    }
+  });
+  tl.to(modalContent, { y: 30, scale: 0.97, opacity: 0, duration: 0.25, ease: 'power2.in' })
+    .to(modalOverlay, { opacity: 0, duration: 0.2, ease: 'power2.in' }, '-=0.15');
+}
+
+modalCloseBtn.addEventListener('click', closeProjectModal);
+modalOverlay.addEventListener('click', (e) => {
+  if (e.target === modalOverlay) closeProjectModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+    closeProjectModal();
+  }
+});
+
+/* ============================================================
+   4. NAV  ──────────────────────────────────────────────────────
+   ============================================================ */
+function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
+window.toggleMenu = toggleMenu;
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', () => { document.getElementById('navLinks').classList.remove('open'); });
+});
+
+/* ============================================================
+   5. ANIMACIONES GSAP  ─────────────────────────────────────────
+   ============================================================ */
+gsap.registerPlugin(ScrollTrigger);
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+if (!reduceMotion) {
+
+  /* ─── HERO entrada ─── */
+  const heroEls = gsap.utils.toArray('[data-hero]');
+  const heroImage = document.querySelector('[data-hero-image]');
+
+  gsap.set(heroEls, { y: 30, opacity: 0 });
+  if (heroImage) gsap.set(heroImage, { x: 40, opacity: 0 });
+
+  const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: 0.15 });
+  heroTl
+    .to(heroEls, { y: 0, opacity: 1, duration: 0.9, stagger: 0.12 })
+    .to(heroImage, { x: 0, opacity: 1, duration: 1 }, '-=0.7');
+
+  /* ─── HERO glow parallax ─── */
+  const heroGlow = document.getElementById('heroGlow');
+  if (heroGlow) {
+    gsap.to(heroGlow, {
+      yPercent: 30,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#hero',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: true
+      }
+    });
+  }
+
+  /* ─── Counters animados ─── */
+  document.querySelectorAll('[data-counter]').forEach(el => {
+    const target = parseInt(el.dataset.counter, 10);
+    const suffix = el.dataset.suffix || '';
+    const obj = { val: 0 };
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 90%',
+      once: true,
+      onEnter: () => {
+        gsap.to(obj, {
+          val: target,
+          duration: 1.6,
+          ease: 'power2.out',
+          onUpdate: () => { el.textContent = Math.round(obj.val) + suffix; }
+        });
+      }
+    });
+  });
+
+  /* ─── data-anim (fade + up al hacer scroll) ─── */
+  gsap.utils.toArray('[data-anim]').forEach(el => {
+    gsap.fromTo(el,
+      { y: 30, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 88%',
+          toggleActions: 'play none none none'
+        }
+      }
+    );
+  });
+
+  /* ─── data-anim-stagger (grupos: items hijos con stagger por contenedor padre) ─── */
+  const staggerGroups = new Map();
+  gsap.utils.toArray('[data-anim-stagger]').forEach(el => {
+    const parent = el.parentElement;
+    if (!staggerGroups.has(parent)) staggerGroups.set(parent, []);
+    staggerGroups.get(parent).push(el);
+  });
+
+  staggerGroups.forEach((items, parent) => {
+    gsap.set(items, { y: 30, opacity: 0 });
+    ScrollTrigger.create({
+      trigger: parent,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => {
+        gsap.to(items, {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          ease: 'power3.out',
+          stagger: 0.12
+        });
+      }
+    });
+  });
+
+  /* ─── Timeline: línea que se dibuja al hacer scroll ─── */
+  const timeline = document.getElementById('timeline');
+  if (timeline) {
+    gsap.fromTo(timeline,
+      { '--timeline-progress': 0 },
+      {
+        scrollTrigger: {
+          trigger: timeline,
+          start: 'top 70%',
+          end: 'bottom 80%',
+          scrub: 0.8
+        }
+      }
+    );
+    // animamos la pseudo-línea con scaleY usando un wrapper
+    gsap.fromTo(timeline,
+      { },
+      {
+        scrollTrigger: {
+          trigger: timeline,
+          start: 'top 75%',
+          end: 'bottom 85%',
+          scrub: 0.6,
+          onUpdate: (self) => {
+            timeline.style.setProperty('--p', self.progress);
+          }
+        }
+      }
+    );
+  }
+}
+
 </script>
 </body>
 </html>
