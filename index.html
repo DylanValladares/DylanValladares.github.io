@@ -342,36 +342,49 @@ section { padding: 80px 0 40px; }
 /* ============================================================
    6. PROJECTS  ─────────────────────────────────────────────────
    ============================================================ */
+/* ── Projects slider ── */
+.projects-slider-wrap {
+  position: relative;
+  overflow: hidden;
+  margin: 0 -20px;
+  padding: 0 20px;
+}
 .projects-list {
   display: flex;
-  flex-direction: column;
-  gap: 28px;
+  gap: 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  padding-bottom: 16px;
+  padding-right: 20px;
+  scrollbar-width: none;
 }
+.projects-list::-webkit-scrollbar { display: none; }
+.projects-list.is-dragging { cursor: grabbing; }
 
 .project-card {
   /* button reset */
   font: inherit;
   color: inherit;
   text-align: left;
-  cursor: pointer;
-  width: 100%;
-  /* layout */
-  border-radius: 28px;
-  min-height: 380px;
+  /* slider item */
+  flex: 0 0 480px;
+  border-radius: 24px;
+  min-height: 340px;
   display: flex;
-  align-items: center;
-  gap: 48px;
-  padding: 48px;
-  text-decoration: none;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px 28px;
   position: relative;
   overflow: hidden;
-  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
   box-shadow: var(--shadow-md);
 }
 .project-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
+.project-card.reverse { flex-direction: column; }
 
 .project-card.theme-orange { background: linear-gradient(110deg, var(--orange-2) 0%, var(--red) 100%); color: white; }
 .project-card.theme-light  { background: var(--bg-card); color: var(--dark); border: 1px solid var(--border-2); }
@@ -447,7 +460,7 @@ section { padding: 80px 0 40px; }
 .project-visual {
   flex: 1;
   position: relative;
-  height: 320px;
+  min-height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -864,9 +877,8 @@ section { padding: 80px 0 40px; }
 /* ── Two-column layout ── */
 .about-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  align-items: start;
+  grid-template-columns: 1fr;
+  gap: 18px;
   margin-bottom: 32px;
 }
 
@@ -1114,37 +1126,35 @@ section { padding: 80px 0 40px; }
 .tag:hover { color: var(--dark); border-color: var(--orange); }
 .tag.muted { opacity: 0.4; }
 
-/* Tool icons grid */
-.tool-icons {
+/* Tool icons — fila horizontal compacta */
+.tool-icons-row {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 4px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 .tool-icon {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 10px 12px;
+  padding: 5px 10px;
   background: var(--bg-card-2);
   border: 1px solid var(--border-2);
-  border-radius: 12px;
-  min-width: 56px;
+  border-radius: 8px;
   transition: transform 0.18s var(--ease-out), border-color 0.18s;
 }
-.tool-icon:hover { transform: translateY(-3px); border-color: var(--orange); }
+.tool-icon:hover { transform: translateY(-2px); border-color: var(--orange); }
 .tool-icon img {
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   display: block;
 }
 .tool-icon span {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--mid);
-  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
@@ -1472,7 +1482,7 @@ body.modal-open { overflow: hidden; }
     gap: 24px;
     min-height: auto;
   }
-  .project-visual { width: 100%; height: 240px; }
+  .project-visual { width: 100%; min-height: 160px; }
   .stats-strip { grid-template-columns: 1fr 1fr; }
   .about-grid { grid-template-columns: 1fr; }
   .about-right { position: static; }
@@ -1517,7 +1527,7 @@ body.modal-open { overflow: hidden; }
     <div class="hero-text">
       <h1 class="hero-title js-anim">Hola, soy Dylan.</h1>
       <p class="hero-subtitle js-anim">Transformo datos en decisiones estratégicas con dashboards y reportes que conectan la operación con la dirección.</p>
-      <p class="hero-desc js-anim">Analista de Datos · Egresado de Ingeniería de Sistemas (UTP)</p>
+      <p class="hero-desc js-anim">Analista de Datos · Bachiller en Ingeniería de Sistemas (UTP)</p>
       <div class="hero-available js-anim">
         <span class="dot-green"></span>
         <span class="hero-available-text">Disponible para nuevas oportunidades</span>
@@ -1529,6 +1539,10 @@ body.modal-open { overflow: hidden; }
             <path d="M2 7h12M5 2v2M11 2v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           Contactar
+        </a>
+        <a href="CV_Dylan_Valladares_Mota.pdf" target="_blank" rel="noopener" class="btn-cv" style="height:40px;">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M8 2v9M4 8l4 4 4-4M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Ver CV
         </a>
         <div class="divider-v"></div>
         <a href="mailto:valladaresmotadylan@gmail.com" class="btn-icon" aria-label="Email">
@@ -1565,7 +1579,8 @@ body.modal-open { overflow: hidden; }
       <p class="section-subtitle">Dashboards e informes que conectan la operación con la dirección. Trabajo con datos reales para generar decisiones.</p>
     </div>
 
-    <div class="projects-list">
+    <div class="projects-slider-wrap">
+    <div class="projects-list" id="projectsSlider">
 
       <!-- Project 1: Dashboard Salud TI -->
       <button type="button" class="project-card theme-orange js-anim" data-project="dashboard-ti">
@@ -1637,7 +1652,8 @@ body.modal-open { overflow: hidden; }
         </div>
       </button>
 
-    </div>
+    </div><!-- /projects-list -->
+    </div><!-- /projects-slider-wrap -->
   </div>
 </section>
 
@@ -1855,55 +1871,6 @@ body.modal-open { overflow: hidden; }
 
       </div><!-- /about-left -->
 
-      <!-- RIGHT: Galería -->
-      <div class="about-right js-anim">
-        <div class="gallery-main">
-          <!-- Reemplaza el src cuando tengas la imagen principal (diploma o foto UTP) -->
-          <div class="gallery-placeholder">
-            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 16l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Foto destacada<br>(diploma / UTP)</span>
-          </div>
-        </div>
-        <div class="gallery-thumbs">
-          <div class="gallery-thumb">
-            <div class="gallery-thumb-ph">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.5"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5"/></svg>
-              <span>Diploma bachiller</span>
-            </div>
-          </div>
-          <div class="gallery-thumb">
-            <div class="gallery-thumb-ph">
-              <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 16l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Etapa universitaria</span>
-            </div>
-          </div>
-          <div class="gallery-thumb">
-            <div class="gallery-thumb-ph">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.5"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5"/></svg>
-              <span>Certificado Excel</span>
-            </div>
-          </div>
-          <div class="gallery-thumb">
-            <div class="gallery-thumb-ph">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.5"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5"/></svg>
-              <span>Certificado Scrum</span>
-            </div>
-          </div>
-          <div class="gallery-thumb">
-            <div class="gallery-thumb-ph">
-              <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 16l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Universidad</span>
-            </div>
-          </div>
-          <div class="gallery-thumb">
-            <div class="gallery-thumb-ph">
-              <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 16l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Agregar foto</span>
-            </div>
-          </div>
-        </div>
-      </div><!-- /about-right -->
-
     </div><!-- /about-grid -->
 
     <!-- Skills -->
@@ -1914,7 +1881,7 @@ body.modal-open { overflow: hidden; }
         <!-- Análisis de Datos con iconos -->
         <div class="skills-col-new">
           <h4>Análisis de Datos</h4>
-          <div class="tool-icons">
+          <div class="tool-icons-row">
             <div class="tool-icon">
               <img src="microsoft-excel.svg" alt="Excel">
               <span>Excel</span>
@@ -1932,7 +1899,7 @@ body.modal-open { overflow: hidden; }
               <span>Gemini</span>
             </div>
           </div>
-          <div class="tags" style="margin-top:12px;">
+          <div class="tags">
             <span class="tag">Power BI</span>
             <span class="tag">Power Query</span>
             <span class="tag">Power Pivot</span>
@@ -2377,6 +2344,93 @@ const PROJECTS = {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && overlay.classList.contains('is-open')) close();
+  });
+})();
+
+/* ============================================================
+   5. PROJECTS SLIDER — momentum drag  ─────────────────────────
+   ============================================================ */
+(function initSlider() {
+  const slider = document.getElementById('projectsSlider');
+  if (!slider) return;
+
+  let isDragging = false;
+  let startX = 0;
+  let scrollStart = 0;
+  let velX = 0;
+  let prevX = 0;
+  let prevT = 0;
+  let rafId = null;
+  let moved = false;
+
+  function momentum() {
+    velX *= 0.94;
+    slider.scrollLeft += velX;
+    if (Math.abs(velX) > 0.3) rafId = requestAnimationFrame(momentum);
+  }
+
+  slider.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    moved = false;
+    startX = e.pageX;
+    scrollStart = slider.scrollLeft;
+    prevX = e.pageX;
+    prevT = performance.now();
+    velX = 0;
+    cancelAnimationFrame(rafId);
+    slider.classList.add('is-dragging');
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.pageX - startX;
+    if (Math.abs(dx) > 3) moved = true;
+    const now = performance.now();
+    const dt = now - prevT || 1;
+    velX = (prevX - e.pageX) / dt * 14;
+    prevX = e.pageX;
+    prevT = now;
+    slider.scrollLeft = scrollStart - dx;
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    slider.classList.remove('is-dragging');
+    if (moved) {
+      rafId = requestAnimationFrame(momentum);
+    } else {
+      const card = e.target.closest('[data-project]');
+      if (card) {
+        // restaurar pointer-events antes del click
+        slider.classList.remove('is-dragging');
+        card.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }
+    }
+  });
+
+  // Touch
+  slider.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].pageX;
+    scrollStart = slider.scrollLeft;
+    prevX = startX;
+    prevT = performance.now();
+    velX = 0;
+    cancelAnimationFrame(rafId);
+  }, { passive: true });
+
+  slider.addEventListener('touchmove', (e) => {
+    const dx = e.touches[0].pageX - startX;
+    const now = performance.now();
+    velX = (prevX - e.touches[0].pageX) / (now - prevT || 1) * 14;
+    prevX = e.touches[0].pageX;
+    prevT = now;
+    slider.scrollLeft = scrollStart - dx;
+  }, { passive: true });
+
+  slider.addEventListener('touchend', () => {
+    rafId = requestAnimationFrame(momentum);
   });
 })();
 </script>
