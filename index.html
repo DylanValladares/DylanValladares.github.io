@@ -343,46 +343,36 @@ section { padding: 80px 0 40px; }
    6. PROJECTS  ─────────────────────────────────────────────────
    ============================================================ */
 /* ── Projects slider ── */
-.projects-slider-wrap {
-  position: relative;
-  overflow: hidden;
-  /* fade edges */
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
-}
 .projects-list {
   display: flex;
-  gap: 20px;
-  cursor: grab;
-  will-change: transform;
-  padding: 8px 4px 20px;
-  user-select: none;
+  flex-direction: column;
+  gap: 28px;
 }
-.projects-list.is-dragging { cursor: grabbing; }
 
 .project-card {
   font: inherit;
   color: inherit;
   text-align: left;
+  cursor: pointer;
+  width: 100%;
   border: none;
   outline: none;
-  flex: 0 0 min(420px, 80vw);
-  border-radius: 24px;
-  min-height: 420px;
+  border-radius: 28px;
+  min-height: 380px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 28px 24px;
+  align-items: center;
+  gap: 48px;
+  padding: 48px;
   position: relative;
   overflow: hidden;
-  transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
   box-shadow: var(--shadow-md);
 }
 .project-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   box-shadow: var(--shadow-lg);
 }
-.project-card.reverse { flex-direction: column; }
+.project-card.reverse { flex-direction: row-reverse; }
 
 .project-card.theme-orange { background: linear-gradient(110deg, var(--orange-2) 0%, var(--red) 100%); color: white; }
 .project-card.theme-light  { background: var(--bg-card); color: var(--dark); border: 1px solid var(--border-2); }
@@ -458,7 +448,7 @@ section { padding: 80px 0 40px; }
 .project-visual {
   flex: 1;
   position: relative;
-  min-height: 180px;
+  height: 320px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1480,7 +1470,13 @@ body.modal-open { overflow: hidden; }
     gap: 24px;
     min-height: auto;
   }
-  .project-visual { width: 100%; min-height: 160px; }
+  .project-card, .project-card.reverse {
+    flex-direction: column;
+    padding: 32px 24px;
+    gap: 24px;
+    min-height: auto;
+  }
+  .project-visual { width: 100%; height: 240px; }
   .stats-strip { grid-template-columns: 1fr 1fr; }
   .about-grid { grid-template-columns: 1fr; }
   .about-right { position: static; }
@@ -1577,8 +1573,7 @@ body.modal-open { overflow: hidden; }
       <p class="section-subtitle">Dashboards e informes que conectan la operación con la dirección. Trabajo con datos reales para generar decisiones.</p>
     </div>
 
-    <div class="projects-slider-wrap">
-    <div class="projects-list" id="projectsSlider">
+    <div class="projects-list">
 
       <!-- Project 1: Dashboard Salud TI -->
       <button type="button" class="project-card theme-orange js-anim" data-project="dashboard-ti">
@@ -1650,8 +1645,7 @@ body.modal-open { overflow: hidden; }
         </div>
       </button>
 
-    </div><!-- /projects-list -->
-    </div><!-- /projects-slider-wrap -->
+    </div>
   </div>
 </section>
 
@@ -2346,135 +2340,6 @@ const PROJECTS = {
 
   // Exponer para el slider (los clones no tienen listener)
   window.__openProjectModal = open;
-})();
-
-/* ============================================================
-   5. PROJECTS SLIDER — infinite loop + momentum  ──────────────
-   ============================================================ */
-(function initSlider() {
-  const wrap  = document.querySelector('.projects-slider-wrap');
-  const track = document.getElementById('projectsSlider');
-  if (!track) return;
-
-  // Clonar para loop: [clon][original][clon]
-  const origCards = Array.from(track.children);
-  const setLen    = origCards.length; // 4
-  origCards.forEach(c => track.appendChild(c.cloneNode(true)));
-  origCards.forEach(c => track.prepend(c.cloneNode(true)));
-
-  const GAP   = 20;
-  const cardW = () => track.children[0].offsetWidth + GAP;
-
-  // offset inicial: apuntar al set central
-  let offset    = 0;
-  let velX      = 0;
-  let rafId     = null;
-  let isDrag    = false;
-  let startX    = 0;
-  let offsetStart = 0;
-  let prevX     = 0;
-  let prevT     = 0;
-  let moved     = false;
-
-  function setOffset(val) {
-    offset = val;
-    track.style.transform = `translateX(${offset}px)`;
-  }
-
-  // Salto silencioso para el loop
-  function loopCheck() {
-    const w = setLen * cardW();
-    if (offset < -(w * 2)) setOffset(offset + w);
-    if (offset > -w)        setOffset(offset - w);
-  }
-
-  function goToCenter(animate) {
-    if (!animate) track.style.transition = 'none';
-    setOffset(-setLen * cardW());
-    if (!animate) requestAnimationFrame(() => { track.style.transition = ''; });
-  }
-
-  // Init después de layout
-  requestAnimationFrame(() => goToCenter(false));
-
-  function momentum() {
-    velX  *= 0.93;
-    setOffset(offset + velX);
-    loopCheck();
-    if (Math.abs(velX) > 0.4) rafId = requestAnimationFrame(momentum);
-  }
-
-  // Mouse
-  wrap.addEventListener('mousedown', (e) => {
-    isDrag       = true;
-    moved        = false;
-    startX       = e.clientX;
-    offsetStart  = offset;
-    prevX        = e.clientX;
-    prevT        = performance.now();
-    velX         = 0;
-    cancelAnimationFrame(rafId);
-    track.style.transition = 'none';
-    wrap.style.cursor      = 'grabbing';
-    e.preventDefault();
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!isDrag) return;
-    const dx  = e.clientX - startX;
-    if (Math.abs(dx) > 3) moved = true;
-    const now = performance.now();
-    // velocidad para inercia: arrastrar derecha → offset aumenta (cards van derecha)
-    velX  = (e.clientX - prevX) / (now - prevT || 1) * 14;
-    prevX = e.clientX;
-    prevT = now;
-    setOffset(offsetStart + dx);
-    loopCheck();
-  });
-
-  document.addEventListener('mouseup', (e) => {
-    if (!isDrag) return;
-    isDrag             = false;
-    wrap.style.cursor  = '';
-    track.style.transition = '';
-    if (moved) {
-      rafId = requestAnimationFrame(momentum);
-    } else {
-      const card = e.target.closest('[data-project]');
-      if (card && window.__openProjectModal) {
-        window.__openProjectModal(card.dataset.project);
-      }
-    }
-  });
-
-  // Touch
-  let touchOffsetStart = 0;
-  wrap.addEventListener('touchstart', (e) => {
-    startX           = e.touches[0].clientX;
-    touchOffsetStart = offset;
-    prevX            = startX;
-    prevT            = performance.now();
-    velX             = 0;
-    cancelAnimationFrame(rafId);
-    track.style.transition = 'none';
-  }, { passive: true });
-
-  wrap.addEventListener('touchmove', (e) => {
-    const dx  = e.touches[0].clientX - startX;
-    const now = performance.now();
-    velX  = (e.touches[0].clientX - prevX) / (now - prevT || 1) * 14;
-    prevX = e.touches[0].clientX;
-    prevT = now;
-    setOffset(touchOffsetStart + dx);
-    loopCheck();
-  }, { passive: true });
-
-  wrap.addEventListener('touchend', () => {
-    track.style.transition = '';
-    rafId = requestAnimationFrame(momentum);
-  });
-
-  window.addEventListener('resize', () => goToCenter(false));
 })();
 </script>
 
