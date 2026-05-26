@@ -346,35 +346,33 @@ section { padding: 80px 0 40px; }
 .projects-slider-wrap {
   position: relative;
   overflow: hidden;
-  margin: 0 -20px;
-  padding: 0 20px;
+  /* fade edges */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
 }
 .projects-list {
   display: flex;
   gap: 20px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   cursor: grab;
-  padding-bottom: 16px;
-  padding-right: 20px;
-  scrollbar-width: none;
+  will-change: transform;
+  padding: 8px 4px 20px;
+  user-select: none;
 }
-.projects-list::-webkit-scrollbar { display: none; }
 .projects-list.is-dragging { cursor: grabbing; }
 
 .project-card {
-  /* button reset */
   font: inherit;
   color: inherit;
   text-align: left;
-  /* slider item */
-  flex: 0 0 480px;
+  border: none;
+  outline: none;
+  flex: 0 0 min(420px, 80vw);
   border-radius: 24px;
-  min-height: 340px;
+  min-height: 420px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 32px 28px;
+  padding: 28px 24px;
   position: relative;
   overflow: hidden;
   transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
@@ -2345,93 +2343,138 @@ const PROJECTS = {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && overlay.classList.contains('is-open')) close();
   });
+
+  // Exponer para el slider (los clones no tienen listener)
+  window.__openProjectModal = open;
 })();
 
 /* ============================================================
-   5. PROJECTS SLIDER — momentum drag  ─────────────────────────
+   5. PROJECTS SLIDER — infinite loop + momentum  ──────────────
    ============================================================ */
 (function initSlider() {
-  const slider = document.getElementById('projectsSlider');
-  if (!slider) return;
+  const wrap  = document.querySelector('.projects-slider-wrap');
+  const track = document.getElementById('projectsSlider');
+  if (!track) return;
 
-  let isDragging = false;
-  let startX = 0;
-  let scrollStart = 0;
-  let velX = 0;
-  let prevX = 0;
-  let prevT = 0;
-  let rafId = null;
-  let moved = false;
+  // Clonar para loop: [clon][original][clon]
+  const origCards = Array.from(track.children);
+  const setLen    = origCards.length; // 4
+  origCards.forEach(c => track.appendChild(c.cloneNode(true)));
+  origCards.forEach(c => track.prepend(c.cloneNode(true)));
 
-  function momentum() {
-    velX *= 0.94;
-    slider.scrollLeft += velX;
-    if (Math.abs(velX) > 0.3) rafId = requestAnimationFrame(momentum);
+  const GAP   = 20;
+  const cardW = () => track.children[0].offsetWidth + GAP;
+
+  // offset inicial: apuntar al set central
+  let offset    = 0;
+  let velX      = 0;
+  let rafId     = null;
+  let isDrag    = false;
+  let startX    = 0;
+  let offsetStart = 0;
+  let prevX     = 0;
+  let prevT     = 0;
+  let moved     = false;
+
+  function setOffset(val) {
+    offset = val;
+    track.style.transform = `translateX(${offset}px)`;
   }
 
-  slider.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    moved = false;
-    startX = e.pageX;
-    scrollStart = slider.scrollLeft;
-    prevX = e.pageX;
-    prevT = performance.now();
-    velX = 0;
+  // Salto silencioso para el loop
+  function loopCheck() {
+    const w = setLen * cardW();
+    if (offset < -(w * 2)) setOffset(offset + w);
+    if (offset > -w)        setOffset(offset - w);
+  }
+
+  function goToCenter(animate) {
+    if (!animate) track.style.transition = 'none';
+    setOffset(-setLen * cardW());
+    if (!animate) requestAnimationFrame(() => { track.style.transition = ''; });
+  }
+
+  // Init después de layout
+  requestAnimationFrame(() => goToCenter(false));
+
+  function momentum() {
+    velX  *= 0.93;
+    setOffset(offset + velX);
+    loopCheck();
+    if (Math.abs(velX) > 0.4) rafId = requestAnimationFrame(momentum);
+  }
+
+  // Mouse
+  wrap.addEventListener('mousedown', (e) => {
+    isDrag       = true;
+    moved        = false;
+    startX       = e.clientX;
+    offsetStart  = offset;
+    prevX        = e.clientX;
+    prevT        = performance.now();
+    velX         = 0;
     cancelAnimationFrame(rafId);
-    slider.classList.add('is-dragging');
+    track.style.transition = 'none';
+    wrap.style.cursor      = 'grabbing';
     e.preventDefault();
   });
 
   document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const dx = e.pageX - startX;
+    if (!isDrag) return;
+    const dx  = e.clientX - startX;
     if (Math.abs(dx) > 3) moved = true;
     const now = performance.now();
-    const dt = now - prevT || 1;
-    velX = (prevX - e.pageX) / dt * 14;
-    prevX = e.pageX;
+    // velocidad para inercia: arrastrar derecha → offset aumenta (cards van derecha)
+    velX  = (e.clientX - prevX) / (now - prevT || 1) * 14;
+    prevX = e.clientX;
     prevT = now;
-    slider.scrollLeft = scrollStart - dx;
+    setOffset(offsetStart + dx);
+    loopCheck();
   });
 
   document.addEventListener('mouseup', (e) => {
-    if (!isDragging) return;
-    isDragging = false;
-    slider.classList.remove('is-dragging');
+    if (!isDrag) return;
+    isDrag             = false;
+    wrap.style.cursor  = '';
+    track.style.transition = '';
     if (moved) {
       rafId = requestAnimationFrame(momentum);
     } else {
       const card = e.target.closest('[data-project]');
-      if (card) {
-        // restaurar pointer-events antes del click
-        slider.classList.remove('is-dragging');
-        card.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      if (card && window.__openProjectModal) {
+        window.__openProjectModal(card.dataset.project);
       }
     }
   });
 
   // Touch
-  slider.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].pageX;
-    scrollStart = slider.scrollLeft;
-    prevX = startX;
-    prevT = performance.now();
-    velX = 0;
+  let touchOffsetStart = 0;
+  wrap.addEventListener('touchstart', (e) => {
+    startX           = e.touches[0].clientX;
+    touchOffsetStart = offset;
+    prevX            = startX;
+    prevT            = performance.now();
+    velX             = 0;
     cancelAnimationFrame(rafId);
+    track.style.transition = 'none';
   }, { passive: true });
 
-  slider.addEventListener('touchmove', (e) => {
-    const dx = e.touches[0].pageX - startX;
+  wrap.addEventListener('touchmove', (e) => {
+    const dx  = e.touches[0].clientX - startX;
     const now = performance.now();
-    velX = (prevX - e.touches[0].pageX) / (now - prevT || 1) * 14;
-    prevX = e.touches[0].pageX;
+    velX  = (e.touches[0].clientX - prevX) / (now - prevT || 1) * 14;
+    prevX = e.touches[0].clientX;
     prevT = now;
-    slider.scrollLeft = scrollStart - dx;
+    setOffset(touchOffsetStart + dx);
+    loopCheck();
   }, { passive: true });
 
-  slider.addEventListener('touchend', () => {
+  wrap.addEventListener('touchend', () => {
+    track.style.transition = '';
     rafId = requestAnimationFrame(momentum);
   });
+
+  window.addEventListener('resize', () => goToCenter(false));
 })();
 </script>
 
